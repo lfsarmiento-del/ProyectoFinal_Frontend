@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Restaurante XYZ</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+    <header class="header">
+        <div>
+            <h1>Restaurante XYZ</h1>
+            <p>Sistema de reservas y pedidos</p>
+        </div>
+
+        <button onclick="cerrarSesion()">Cerrar sesión</button>
+    </header>
+
+    <main class="dashboard">
+        <section class="card" onclick="navegarA('mesas.html')">
+            <h2>Mesas</h2>
+            <p>Administrar mesas, capacidad y estado.</p>
+        </section>
+
+        <section class="card" onclick="navegarA('reservas.html')">
+            <h2>Reservas</h2>
+            <p>Gestionar reservas de clientes.</p>
+        </section>
+
+        <section class="card" onclick="navegarA('productos.html')">
+            <h2>Productos</h2>
+            <p>Consultar y administrar productos del menú.</p>
+        </section>
+
+        <section class="card" onclick="navegarA('pedidos.html')">
+            <h2>Pedidos</h2>
+            <p>Registrar y consultar pedidos por mesa.</p>
+        </section>
+    </main>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/main.js"></script>
+    <script>
+        verificarSesion();
+    </script>
+</body>
+</html>
