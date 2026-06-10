@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
     const formLogin = document.getElementById("formLogin");
+    const mensaje = document.getElementById("mensaje");
 
     if (!formLogin) {
         return;
@@ -10,7 +11,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const usuario = document.getElementById("usuario").value.trim();
         const contrasena = document.getElementById("contrasena").value.trim();
-        const mensaje = document.getElementById("mensaje");
 
         mensaje.textContent = "";
 
@@ -34,15 +34,15 @@ document.addEventListener("DOMContentLoaded", function () {
             const data = await respuesta.json();
 
             if (data.status) {
-                localStorage.setItem("token", data.token || "token_temporal");
-                localStorage.setItem("usuario", JSON.stringify(data.usuario || { usuario }));
+                localStorage.setItem("token", data.data.token);
+                localStorage.setItem("usuario", JSON.stringify(data.data.usuario));
 
                 window.location.href = "pages/dashboard.html";
             } else {
-                mensaje.textContent = data.message || "Credenciales incorrectas.";
+                mensaje.textContent = data.message;
             }
         } catch (error) {
-            mensaje.textContent = "No fue posible conectar con el servidor.";
+            mensaje.textContent = "No se pudo conectar con el servidor de autenticación.";
         }
     });
 });
