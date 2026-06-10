@@ -3,46 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Restaurante XYZ</title>
+    <title>Dashboard - Restaurante</title>
     <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
-
     <header class="header">
-        <div>
-            <h1>Restaurante XYZ</h1>
-            <p>Sistema de reservas y pedidos</p>
-        </div>
+        <h1>Sistema Web de Reservas y Pedidos</h1>
 
-        <button onclick="cerrarSesion()">Cerrar sesión</button>
+        <nav class="nav">
+            <a href="dashboard.html">Inicio</a>
+            <a href="mesas.html">Mesas</a>
+            <a href="reservas.html">Reservas</a>
+            <a href="productos.html">Productos</a>
+            <a href="pedidos.html">Pedidos</a>
+        </nav>
+
+        <div class="usuario-info">
+            <span id="nombreUsuario">Usuario</span>
+            <span id="rolUsuario">Rol</span>
+            <button id="btnLogout">Cerrar sesión</button>
+        </div>
     </header>
 
-    <main class="dashboard">
-        <section class="card" onclick="navegarA('mesas.html')">
-            <h2>Mesas</h2>
-            <p>Administrar mesas, capacidad y estado.</p>
-        </section>
-
-        <section class="card" onclick="navegarA('reservas.html')">
-            <h2>Reservas</h2>
-            <p>Gestionar reservas de clientes.</p>
-        </section>
-
-        <section class="card" onclick="navegarA('productos.html')">
-            <h2>Productos</h2>
-            <p>Consultar y administrar productos del menú.</p>
-        </section>
-
-        <section class="card" onclick="navegarA('pedidos.html')">
-            <h2>Pedidos</h2>
-            <p>Registrar y consultar pedidos por mesa.</p>
-        </section>
+    <main>
+        <!-- El contenido del dashboard se carga desde dashboard.js -->
     </main>
 
     <script src="../js/config.js"></script>
     <script src="../js/main.js"></script>
-    <script>
-        verificarSesion();
-    </script>
+    <script src="../js/dashboard.js"></script>
 </body>
 </html>
