@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Restaurante</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <main>
+        <section class="login-container">
+            <h1>Iniciar Sesión</h1>
+
+            <form id="formLogin" class="formulario">
+                <input type="text" id="usuario" placeholder="Usuario" required>
+                <input type="password" id="contrasena" placeholder="Contraseña" required>
+
+                <button type="submit">Ingresar</button>
+            </form>
+
+            <p id="mensaje"></p>
+
+            <div style="margin-top: 20px; text-align: center;">
+                <p><strong>Usuarios de prueba:</strong></p>
+                <p>admin / admin123</p>
+                <p>empleado / empleado123</p>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/config.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>

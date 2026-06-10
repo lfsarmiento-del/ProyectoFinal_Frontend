@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio - Restaurante</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <main>
+        <section class="login-container">
+            <h1>Sistema Web de Reservas y Pedidos</h1>
+            <p style="text-align: center;">Cargando sistema...</p>
+        </section>
+    </main>
+
+    <script>
+        const token = localStorage.getItem("token");
+
+        if (token) {
+            window.location.href = "pages/dashboard.html";
+        } else {
+            window.location.href = "login.html";
+        }
+    </script>
+</body>
+</html>
