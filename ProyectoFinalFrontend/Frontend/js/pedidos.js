@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const contenedor = document.querySelector("main") || document.body;
     let productosDisponibles = [];
     let detallePedido = [];
+    let pedidoEditandoId = null;
 
     contenedor.innerHTML = `
         <section class="seccion">
@@ -12,20 +13,31 @@ document.addEventListener("DOMContentLoaded", function () {
 
             <form id="formPedido" class="formulario">
                 <input type="number" id="mesa_id" placeholder="ID de la mesa" min="1" required>
+                <input type="date" id="fecha_pedido">
+                <input type="time" id="hora_pedido">
 
-                <select id="producto_id" required>
+                <select id="estado_pedido" required>
+                    <option value="pendiente">Pendiente</option>
+                    <option value="en_preparacion">En preparación</option>
+                    <option value="entregado">Entregado</option>
+                    <option value="pagado">Pagado</option>
+                    <option value="cancelado">Cancelado</option>
+                </select>
+
+                <select id="producto_id">
                     <option value="">Seleccione un producto</option>
                 </select>
 
-                <input type="number" id="cantidad" placeholder="Cantidad" min="1" value="1" required>
+                <input type="number" id="cantidad" placeholder="Cantidad" min="1" value="1">
 
                 <button type="button" id="btnAgregarProducto">Agregar producto</button>
-                <button type="submit">Registrar pedido</button>
+                <button type="submit" id="btnGuardarPedido">Registrar pedido</button>
+                <button type="button" id="btnCancelarEdicionPedido" style="display:none;">Cancelar edición</button>
             </form>
 
             <p id="mensajePedido"></p>
 
-            <h2>Detalle del pedido</h2>
+            <h2>Detalle del pedido nuevo</h2>
 
             <table class="tabla">
                 <thead>
@@ -52,7 +64,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         <th>Hora</th>
                         <th>Total</th>
                         <th>Estado</th>
-                        <th>Acción</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="tablaPedidos"></tbody>
@@ -67,6 +79,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const mensajePedido = document.getElementById("mensajePedido");
     const totalPedido = document.getElementById("totalPedido");
     const btnAgregarProducto = document.getElementById("btnAgregarProducto");
+    const btnGuardarPedido = document.getElementById("btnGuardarPedido");
+    const btnCancelarEdicionPedido = document.getElementById("btnCancelarEdicionPedido");
 
     async function cargarProductos() {
         try {
@@ -109,6 +123,15 @@ document.addEventListener("DOMContentLoaded", function () {
                             <td>$${Number(pedido.total).toLocaleString("es-CO")}</td>
                             <td>${pedido.estado}</td>
                             <td>
+                                <button class="btnEditarPedido"
+                                    data-id="${pedido.id}"
+                                    data-mesa="${pedido.mesa_id}"
+                                    data-fecha="${pedido.fecha}"
+                                    data-hora="${pedido.hora}"
+                                    data-estado="${pedido.estado}">
+                                    Editar
+                                </button>
+
                                 <button class="btnEliminarPedido" data-id="${pedido.id}">
                                     Eliminar
                                 </button>
@@ -143,6 +166,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     btnAgregarProducto.addEventListener("click", function () {
+        if (pedidoEditandoId) {
+            mensajePedido.textContent = "En modo edición solo se modifican datos generales del pedido.";
+            return;
+        }
+
         const productoId = Number(selectProducto.value);
         const cantidad = Number(document.getElementById("cantidad").value);
 
@@ -177,49 +205,72 @@ document.addEventListener("DOMContentLoaded", function () {
     formPedido.addEventListener("submit", async function (event) {
         event.preventDefault();
 
-        if (detallePedido.length === 0) {
-            mensajePedido.textContent = "Debe agregar al menos un producto al pedido.";
-            return;
-        }
-
         const fechaActual = new Date();
-        const fecha = fechaActual.toISOString().split("T")[0];
-        const hora = fechaActual.toTimeString().split(" ")[0];
 
-        const nuevoPedido = {
+        const pedido = {
             mesa_id: Number(document.getElementById("mesa_id").value),
-            fecha: fecha,
-            hora: hora,
-            estado: "pendiente",
-            productos: detallePedido
+            fecha: document.getElementById("fecha_pedido").value || fechaActual.toISOString().split("T")[0],
+            hora: document.getElementById("hora_pedido").value || fechaActual.toTimeString().split(" ")[0],
+            estado: document.getElementById("estado_pedido").value
         };
 
+        let url = `${API_PEDIDOS_URL}/pedidos`;
+        let metodo = "POST";
+
+        if (pedidoEditandoId) {
+            url = `${API_PEDIDOS_URL}/pedidos/${pedidoEditandoId}`;
+            metodo = "PUT";
+        } else {
+            if (detallePedido.length === 0) {
+                mensajePedido.textContent = "Debe agregar al menos un producto al pedido.";
+                return;
+            }
+
+            pedido.productos = detallePedido;
+        }
+
         try {
-            const respuesta = await fetch(`${API_PEDIDOS_URL}/pedidos`, {
-                method: "POST",
+            const respuesta = await fetch(url, {
+                method: metodo,
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify(nuevoPedido)
+                body: JSON.stringify(pedido)
             });
 
             const data = await respuesta.json();
 
             if (data.status) {
-                mensajePedido.textContent = "Pedido registrado correctamente.";
-                formPedido.reset();
-                detallePedido = [];
-                actualizarDetallePedido();
+                mensajePedido.textContent = pedidoEditandoId
+                    ? "Pedido actualizado correctamente."
+                    : "Pedido registrado correctamente.";
+
+                limpiarFormularioPedido();
                 cargarPedidos();
             } else {
                 mensajePedido.textContent = data.message;
             }
         } catch (error) {
-            mensajePedido.textContent = "Error al registrar el pedido.";
+            mensajePedido.textContent = "Error al guardar el pedido.";
         }
     });
 
     tablaPedidos.addEventListener("click", async function (event) {
+        if (event.target.classList.contains("btnEditarPedido")) {
+            pedidoEditandoId = event.target.getAttribute("data-id");
+
+            document.getElementById("mesa_id").value = event.target.getAttribute("data-mesa");
+            document.getElementById("fecha_pedido").value = event.target.getAttribute("data-fecha");
+            document.getElementById("hora_pedido").value = event.target.getAttribute("data-hora");
+            document.getElementById("estado_pedido").value = event.target.getAttribute("data-estado");
+
+            btnGuardarPedido.textContent = "Actualizar pedido";
+            btnCancelarEdicionPedido.style.display = "inline-block";
+            btnAgregarProducto.style.display = "none";
+
+            mensajePedido.textContent = "Editando pedido seleccionado.";
+        }
+
         if (event.target.classList.contains("btnEliminarPedido")) {
             const id = event.target.getAttribute("data-id");
 
@@ -241,6 +292,19 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
     });
+
+    btnCancelarEdicionPedido.addEventListener("click", limpiarFormularioPedido);
+
+    function limpiarFormularioPedido() {
+        pedidoEditandoId = null;
+        detallePedido = [];
+        formPedido.reset();
+        actualizarDetallePedido();
+
+        btnGuardarPedido.textContent = "Registrar pedido";
+        btnCancelarEdicionPedido.style.display = "none";
+        btnAgregarProducto.style.display = "inline-block";
+    }
 
     cargarProductos();
     cargarPedidos();

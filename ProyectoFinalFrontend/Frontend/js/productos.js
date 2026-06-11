@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const API_PRODUCTOS_URL = typeof API_PRODUCTOS !== "undefined" ? API_PRODUCTOS : "http://127.0.0.1:8003";
 
     const contenedor = document.querySelector("main") || document.body;
+    let productoEditandoId = null;
 
     contenedor.innerHTML = `
         <section class="seccion">
@@ -21,7 +22,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     <option value="false">No disponible</option>
                 </select>
 
-                <button type="submit">Registrar producto</button>
+                <button type="submit" id="btnGuardarProducto">Registrar producto</button>
+                <button type="button" id="btnCancelarEdicionProducto" style="display:none;">Cancelar edición</button>
             </form>
 
             <p id="mensajeProducto"></p>
@@ -35,7 +37,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         <th>Precio</th>
                         <th>Categoría</th>
                         <th>Disponible</th>
-                        <th>Acción</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="tablaProductos"></tbody>
@@ -47,6 +49,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const tablaProductos = document.getElementById("tablaProductos");
     const selectCategoria = document.getElementById("categoria_id");
     const mensajeProducto = document.getElementById("mensajeProducto");
+    const btnGuardarProducto = document.getElementById("btnGuardarProducto");
+    const btnCancelarEdicionProducto = document.getElementById("btnCancelarEdicionProducto");
 
     async function cargarCategorias() {
         try {
@@ -87,6 +91,16 @@ document.addEventListener("DOMContentLoaded", function () {
                             <td>${producto.categoria_id}</td>
                             <td>${producto.disponible ? "Sí" : "No"}</td>
                             <td>
+                                <button class="btnEditarProducto"
+                                    data-id="${producto.id}"
+                                    data-nombre="${producto.nombre}"
+                                    data-descripcion="${producto.descripcion}"
+                                    data-precio="${producto.precio}"
+                                    data-categoria="${producto.categoria_id}"
+                                    data-disponible="${producto.disponible}">
+                                    Editar
+                                </button>
+
                                 <button class="btnEliminarProducto" data-id="${producto.id}">
                                     Eliminar
                                 </button>
@@ -103,7 +117,7 @@ document.addEventListener("DOMContentLoaded", function () {
     formProducto.addEventListener("submit", async function (event) {
         event.preventDefault();
 
-        const nuevoProducto = {
+        const producto = {
             nombre: document.getElementById("nombre").value.trim(),
             descripcion: document.getElementById("descripcion").value.trim(),
             precio: Number(document.getElementById("precio").value),
@@ -111,30 +125,55 @@ document.addEventListener("DOMContentLoaded", function () {
             disponible: document.getElementById("disponible").value === "true"
         };
 
+        const url = productoEditandoId
+            ? `${API_PRODUCTOS_URL}/productos/${productoEditandoId}`
+            : `${API_PRODUCTOS_URL}/productos`;
+
+        const metodo = productoEditandoId ? "PUT" : "POST";
+
         try {
-            const respuesta = await fetch(`${API_PRODUCTOS_URL}/productos`, {
-                method: "POST",
+            const respuesta = await fetch(url, {
+                method: metodo,
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify(nuevoProducto)
+                body: JSON.stringify(producto)
             });
 
             const data = await respuesta.json();
 
             if (data.status) {
-                mensajeProducto.textContent = "Producto registrado correctamente.";
-                formProducto.reset();
+                mensajeProducto.textContent = productoEditandoId
+                    ? "Producto actualizado correctamente."
+                    : "Producto registrado correctamente.";
+
+                limpiarFormularioProducto();
                 cargarProductos();
             } else {
                 mensajeProducto.textContent = data.message;
             }
         } catch (error) {
-            mensajeProducto.textContent = "Error al registrar el producto.";
+            mensajeProducto.textContent = "Error al guardar el producto.";
         }
     });
 
     tablaProductos.addEventListener("click", async function (event) {
+        if (event.target.classList.contains("btnEditarProducto")) {
+            productoEditandoId = event.target.getAttribute("data-id");
+
+            document.getElementById("nombre").value = event.target.getAttribute("data-nombre");
+            document.getElementById("descripcion").value = event.target.getAttribute("data-descripcion");
+            document.getElementById("precio").value = event.target.getAttribute("data-precio");
+            document.getElementById("categoria_id").value = event.target.getAttribute("data-categoria");
+
+            const disponible = event.target.getAttribute("data-disponible");
+            document.getElementById("disponible").value = disponible === "1" || disponible === "true" ? "true" : "false";
+
+            btnGuardarProducto.textContent = "Actualizar producto";
+            btnCancelarEdicionProducto.style.display = "inline-block";
+            mensajeProducto.textContent = "Editando producto seleccionado.";
+        }
+
         if (event.target.classList.contains("btnEliminarProducto")) {
             const id = event.target.getAttribute("data-id");
 
@@ -156,6 +195,15 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
     });
+
+    btnCancelarEdicionProducto.addEventListener("click", limpiarFormularioProducto);
+
+    function limpiarFormularioProducto() {
+        productoEditandoId = null;
+        formProducto.reset();
+        btnGuardarProducto.textContent = "Registrar producto";
+        btnCancelarEdicionProducto.style.display = "none";
+    }
 
     cargarCategorias();
     cargarProductos();
